@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>you</title>
+<script src="lib/codemirror.js"></script>
+<link rel="stylesheet" href="lib/codemirror.css">
+<script src="mode/javascript/javascript.js"></script>
+
+</head>
+<body>
+<textarea id="code1" rows="20" cols="90">
+
+</textarea>
+</body>
+<script>
+var editor = CodeMirror.fromTextArea(document.getElementById('code1'), {
+	lineNumbers: true,
+	mode:  "javascript"
+});
+  </script>
+</html>
