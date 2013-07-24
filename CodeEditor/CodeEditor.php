@@ -10,16 +10,13 @@
     			<script src="CodeEditor/codemirror-3.14/mode/vbscript/vbscript.js"></script>
     			<script src="CodeEditor/codemirror-3.14/addon/edit/matchbrackets.js"></script>    
 				<script src="CodeEditor/codemirror-3.14/addon/edit/closebrackets.js"></script> 
-				<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-				<!--<script src="http://www.jshint.com/get/jshint-2.1.4.js" ></script> -->
+				<script src="CodeEditor/jquery.js"></script>
+		<script src="CodeEditor/jshint-2.1.4.js" ></script> 
 </head>
 <script src="LAS/Home_LAS.js"></script>
 <link href="Style_Template.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="CodeEditor/codemirror-3.14/theme/rubyblue.css">
 <script>
-html="<!-- DESCRIPTION/READ ME -->";
-js="";
-css="";
 ExternalResource = {};
 </script>
 <script>
@@ -46,9 +43,11 @@ require_once("../Template.php");
 ?>
 <div class="Matter">
 <?php
-if(!(isset($_POST['submit']))) {
+$html="<!-- DESCRIPTION/READ ME -->";
+$js="//Use Check to validate your javascript code";
+$css="";
 $id=$_GET['id'];
-if($id!='NewCode') {
+if($id!='NewCode'&&!isset($_POST['save'])) {
 $dbc = mysqli_connect('127.0.0.1', 'root', 'pass', 'CodeConnect')
 or die('<span id="message">Error connecting to MySQL server.</span>');
 $query = "SELECT * FROM CodeSave WHERE id='$id'";
@@ -56,38 +55,38 @@ $result = mysqli_query($dbc,$query);
 $result = mysqli_fetch_row($result);
 if(isset($result)) {
 	$Owner= $result[0];
+	if(!(isset($_POST['submit']))) {
 	$html = $result[1];
 	$js = $result[2];
 	$css = $result[3];	
-	$ExtRes = json_decode($result[4]);
+	$ExtRes =$result[4];
+	$Descp = $result[8];
+}
 }
 else {
 	echo('<META HTTP-EQUIV="Refresh" Content="0; URL=http://127.0.0.1/CodeConnect/NewCode">');
 }
 }
-}
 if(isset($_POST['html'])|| isset($_POST['js'])|| isset($_POST['css'])|| isset($_POST['ExternalRes'])) {
-	$html=$_POST['html']?$_POST['html']:$html;
-	$js=$_POST['js']?$_POST['js']:$js;
-	$css=$_POST['css']?$_POST['css']:$css;
-	$ExtRes=$_POST['ExternalRes']?$_POST['ExternalRes']:$ExtRes;
+	$html=isset($_POST['html'])?$_POST['html']:$html;
+	$js=isset($_POST['js'])?$_POST['js']:$js;
+	$css=isset($_POST['css'])?$_POST['css']:$css;
+	$Descp = isset($_POST['Description'])?$_POST['Description']:$Descp;
+	if(!isset($ExtRes)) {	
+	$ExtRes=$_POST['ExternalRes'];
+	}	
+	//$ExtRes=isset($_POST['ExternalRes'])?$_POST['ExternalRes']:$ExtRes;
 	require_once("codeSave.php");
-	}	
-	$ExtRes=json_decode($_POST['ExternalRes']);
-	foreach($ExtRes as $key => $value)
-	{
-	if($value=="js") 
-	echo("<script src=" . $key . "></script>");
-	else if($value=="css") 
-	echo("<link rel='stylesheet' href=" . $key . "/>");
-	}	
-	echo '<style>' . $css . '</style>';
-?>
+	}
+$Ext = json_decode($ExtRes);
+	?>
 <script>
 <?php
-if (($_POST['ExternalRes'])) {
+if ($ExtRes!='') {
+	//$ExtRes = json_encode($ExtRes);
 ?>
-ExternalResource = <?php echo ($_POST['ExternalRes']); ?>;
+ExternalResources = <?php echo $ExtRes; ?>;
+ExternalResource = eval(ExternalResources);
 <?php
 }
 ?>
@@ -96,8 +95,31 @@ js = <?php echo json_encode($js);?>;
 css = <?php echo json_encode($css);?>;
 </script>
 <?php	
+$iframe = [$html,$css,$js,$_POST['ExternalRes']];
+$iframeid = rand(10000, 99999);
+session_start();
+while(isset($_SESSION[$iframeid]))
+$iframeid = rand(10000, 99999);
+$_SESSION['"$iframeid"']=$iframe;
 ?>
 <style>
+#Description
+{
+width: 450px;
+height: 100px;
+background-color: lightblue;
+padding: 10px;
+font-family: Times;
+font-weight: bold;
+overflow: auto;
+border-radius:10px;
+}
+#iframe
+{
+border-radius:10px;
+width: 600px;
+height: 300px;
+}
 textarea
 {
 overflow-y: auto;
@@ -108,14 +130,6 @@ width: 600px;
 height: 300px;
 border-radius:20px;
 font-size: 75%;
-}
-#Output
-{
-width: 600px;
-height: 300px;
-overflow-x: auto;
-overflow-y: auto;
-background-color: white;
 }
 .Lineerror
 {
@@ -174,19 +188,44 @@ font-size: 75%;
 border:thin solid aqua;
 line-height: 14px;
 }
+.cbutton
+{
+background-color: #ccc;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius:6px;
+    color: #fff;
+    font-family: 'Oswald';
+    font-size: 15px;
+    text-decoration: none;
+    cursor: pointer;
+     border:none;
+}
+.cbutton:hover {
+    border: none;
+    background:red;
+    box-shadow: 5px 5px 5px #777;
+
+}
+#Rating img
+{
+width: 30px;
+height: 30px;
+}
 </style>
-<form action=<?php echo($_GET['id']);?> method="POST">
-<input type="submit" name="submit" value="submit" >
+<form name="MyForm" action=<?php echo($_GET['id']);?> method="POST">
+<input class="cbutton" id="submit" type="submit" name="submit" value="Submit" >
 <?php
-if($_SESSION['Nick']==$Owner) {?>
-<input type="submit" name="save" value="save">
-<?php } ?>
-<input type="button" name="Check" value="Check" onclick="check();"><br>
-<?php if($html ||$js ||$css || $ExtRes) { ?><label>Output</label><div id="Output"><?php echo $html; ?></div><br><?php }?>
+if(($_SESSION['Nick']==$Owner||$_GET['id']=="NewCode") && isset($_SESSION['Nick']))  {?>
+<input class="cbutton" type="submit" name="save" value="Save">
+<?php } if($_SESSION['Nick']) { ?><input class="cbutton" type="button" value="Fork" onclick="document.MyForm.action='NewCode';document.getElementById('submit').click();"> <?php } ?>
+<input class="cbutton" type="button" name="Check" value="Check" onclick="check();"><br><br>
+<?php if($html ||$js ||$css || $ExtRes) { ?><iframe id="iframe" src="CodeEditor/iframe.php?iframeid=<?php echo $iframeid; ?>"></iframe><br><?php }?>
 <label>HTML</label><textarea id="html" name="html"></textarea><br>
 <label>JS</label><textarea id="js" name="js"></textarea><br>
 <label>CSS</label><textarea id="css" name="css"></textarea><br>
 <input type="hidden" id="ExternalRes" name="ExternalRes">
+<input type="hidden" id="Describe" name="Description" value="Description"> 
 <script>
  var mixedMode = {
         name: "htmlmixed",
@@ -206,9 +245,32 @@ if($_SESSION['Nick']==$Owner) {?>
  		EDitor.setOption("theme","rubyblue");
 </script>
 </form>
+<div id="Description">
+Description
+</div>
+<?php
+if($_GET['id']=="NewCode"||$_SESSION['Nick']==$Owner) {
+echo("<span id='EditDescp' onclick='EditDesp()' style='color:blue;font-size:70%;cursor:pointer'><u>Edit</u></span>");
+}
+?>
+<hr>
+<?php
+if($_SESSION['Nick']) {
+?>
+<div id="Rating"><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ></div>
+<?php
+}
+else {
+?>
+<span id="Rating_login" style="color:black;font-size:15px;"><i><b>Please Login to Rate</b></i></span><br>
+<?php
+}
+?>
+<div><b><span id="Rated" style="color:gold;font-size:20px;"></span><div id="SRated" style="overflow:hidden;width:96px;"><img src="CodeEditor/5star.png" style="height:20px;" alt="" ></div></b></div>
+<hr>
 <div id="ExternalListDiv">
 <ul id="Elist"><label><b><i>Add External Links:</i></b></label><input id="Einput" type="text"><img src="CodeEditor/plus.png" style="cursor:pointer;" onclick="Add_ExternalLink();">
-<?php foreach($ExtRes as $key => $value)
+<?php foreach($Ext as $key => $value)
 {
 ?>
 <li><a href=<?php echo $key ?> target="_blank"><?php echo($key);?></a><img src="CodeEditor/close.jpeg" onclick="DeleteExtRes(this);"></li>
@@ -221,59 +283,53 @@ if($_SESSION['Nick']==$Owner) {?>
 <br>
 <hr>
 <div id="Comments">
-<?php session_start();if(isset($_SESSION['Nick'])){ ?><textarea id="CommentInput" style="width:440px;resize: none;"></textarea><?php }else echo("<h4><i>Please Login to Comment</i></h4>");?>
-<div class="CommentDisplay">
-<span><b id="CommentUser">Karthik</b> posted on <b id="CommentTime">Tuesday 16:20:23</b></span>
-<hr>
-hello world!<br>
-</div>
+<?php session_start();if($_GET['id']=="NewCode"){echo("<h4><i>Save to Comment</i></h4>"); } else if(isset($_SESSION['Nick'])){ ?><textarea id="CommentInput" style="width:440px;resize: none;"></textarea><?php }else echo("<h4><i>Please Login to Comment</i></h4>");?>
 </div>
 </div>
 </body>
-<?php
-echo '<script>' . $js . '</script>';	
-?>
 <script>
+function EditDesp() {
+	document.getElementById("Description").innerHTML= prompt("Please Enter Description","Description");
+	document.getElementById("Describe").value=document.getElementById("Description").innerHTML;
+}
+<!-- -----------------------COMMENT-------------------------- -->
 function Add_Comment() {
-	try {
-request = new XMLHttpRequest();
+	//alert(document.getElementById("CommentInput").value);
+try {
+Request = new XMLHttpRequest();
 } catch (tryMS) {
 	try {
-		request = new ActiveXObject("Msxm12.XMLHTTP");
+		Request = new ActiveXObject("Msxm12.XMLHTTP");
 	} catch (otherMS) {
 		try {
-			request = new ActiveXObject("Microsoft.XMLHTTP");
+			Request = new ActiveXObject("Microsoft.XMLHTTP");
 		}	catch (failed) 
-		{request = null;
+		{Request = null;
 	}
 }
 }
 var d=new Date();
 d = new String(d);
-var url="CodeEditor/CommentSubmit.php?Comment="+document.getElementById("CommentInput").value+"&Time=" + d.substring(0,d.length-15);
-<?php
-session_start();
-$_SESSION['id']=$_GET['id']; 
-?>
-request.open("POST",url,true);
-request.onreadystatechange = function () {
+var temp = document.getElementById("CommentInput")?document.getElementById("CommentInput").value.replace(/\n/g, '<br />'):null;
+var url="CodeEditor/CommentSubmit.php?Comment="+temp+"&Time=" + d.substring(0,d.length-15) + "&id=" + <?php echo json_encode($_GET['id']); ?>;
+Request.open("POST",url,true);
+Request.onreadystatechange = function () {
 
-if (request.readyState == 4) {
-							
-				if (request.status == 200) {
-				var pack = request.responseText;
+if (Request.readyState == 4) {
+				if (Request.status == 200) {
+					
+				var pack = Request.responseText;
 				comments = pack.split(";;");		
-				var i=0;
 	while (document.getElementById('Comments').firstChild.nextSibling.nextSibling)
 	document.getElementById('Comments').removeChild(document.getElementById('Comments').firstChild.nextSibling.nextSibling);
-	while (comments[i])
+	for(var i=0;i<comments.length-1;++i)
 	{
 	Comment = comments[i].split(":::");
 	var Nickname = Comment[0];
 	var userNick=document.createElement('b');
 	userNick.innerHTML=Nickname;	
 	var comment =document.createElement('text');
-	comment.innerHTML=Comment[2].replace("\n","<br>");
+	comment.innerHTML=Comment[2];
 	var span = document.createElement('span');
 	var time = document.createElement('b');
 	time.innerHTML=Comment[1];
@@ -289,25 +345,31 @@ if (request.readyState == 4) {
 	div.className="CommentDisplay";
 	div.appendChild(span);
 	document.getElementById('Comments').appendChild(div);
-	i++;
 }					
 					}
 		}
 }
-request.send(null);
-	
+Request.send(null);
+	if (document.getElementById('CommentInput')) {
 	document.getElementById('CommentInput').value="";
 }
+}
+<!-- -----------------------Ext Res-------------------------- -->
 function DeleteExtRes(img) {
 	var li = img.parentNode;
+	var linc= img.previousSibling.innerHTML;
+	delete ExternalResource[linc];
 	li.parentNode.removeChild(li);
+	document.getElementById('ExternalRes').value=JSON.stringify(ExternalResource);
 }
 function Add_ExternalLink() {
 	var Elink=document.getElementById('Einput').value;
+	if (Elink) {
 	var Etype = Elink.substring(Elink.length-3,Elink.length)==".js"?"js":Elink.substring(Elink.length-4,Elink.length)==".css"?"css":null;
-	document.getElementById('Einput').value="";	
+	document.getElementById('Einput').value="";		
 	if (Etype==null) {	
 	return;	
+}
 }
 var listlink = document.createElement('a');
 listlink.href=Elink;
@@ -325,19 +387,113 @@ document.getElementById('Elist').appendChild(listitem);
 ExternalResource[Elink]=Etype;
 document.getElementById('ExternalRes').value=JSON.stringify(ExternalResource);
 }
+<!-- -----------------------RATING-------------------------- -->
+function updateRating(rating) {
+	try {
+request = new XMLHttpRequest();
+} catch (tryMS) {
+	try {
+		request = new ActiveXObject("Msxm12.XMLHTTP");
+	} catch (otherMS) {
+		try {
+			request = new ActiveXObject("Microsoft.XMLHTTP");
+		}	catch (failed) 
+		{request = null;
+	}
+}
+}
+var url="CodeEditor/DBrating.php?rating="+rating+"&id="+'<?php echo $_GET['id']; ?>';
+request.open("POST",url,true);
+request.onreadystatechange = function () {
+if (request.readyState == 4) {
+				if (request.status == 200) {
+					var rating=request.responseText;
+					var rated = rating.split(";;");
+					if (rated[1]=='break"') {
+					rated[0]+='"';
+				}
+					rated[0]=eval(rated[0]);							
+					if (rated[0]!=0) {
+					document.getElementById('Rated').innerHTML=rated[0];			
+					}
+					document.getElementById('SRated').style.width=96/5*rated[0];		
+					if (rated[1]=='break"') {
+						if (document.getElementById('Rating')) {
+					document.getElementById('Rating').innerHTML="";
+}			}
+				}
+		}
+}
+request.send(null);
+}
+
+</script>
+
+<script>
+function Rating_star() {
+	clicked=false;
+	$("#Rating img").hover(function () {
+	this.src="CodeEditor/Ostar.png"	
+	img=this;	
+	while (img)
+	{	img.src="CodeEditor/Ostar.png";
+		img=img.previousSibling;
+	}
+	img=this.nextSibling;
+	while (img)
+	{
+	img.src="CodeEditor/Wstar.png"
+	img=img.nextSibling;
+	}
+},function () {
+	if (!clicked) {
+	img = document.getElementById('Rating').firstChild;
+	while (img)
+	{
+		img.src="CodeEditor/Wstar.png";
+		img= img.nextSibling;
+	}
+}
+});
+	$("#Rating img").click(function () {
+	clicked=true;
+	img=this;
+	var i=0;
+	while (img)
+	{
+	img=img.previousSibling;
+	i++;
+	}
+	document.getElementById('Rating').innerHTML="We appreciate your rating!Thank You!";
+	updateRating(i);
+});
+}
 window.onload = function () {
 	Add_Comment();	
 	Induce_LAS();
+	updateRating('null');	
+	Rating_star();
 	$("#Einput").keydown(function (e){
     if(e.keyCode == 13){
         Add_ExternalLink();
     }
 });
+	
 	$("#CommentInput").keydown(function (e){
     if(e.keyCode == 13 && e.shiftKey){      
         Add_Comment();
     }
 });
+document.getElementById('ExternalRes').value=JSON.stringify(ExternalResource);
+
+document.getElementById('Description').innerHTML= <?php echo json_encode($Descp);?>;
+document.getElementById('Describe').value=document.getElementById('Description').innerHTML;
 }
 </script>
+<style>
+body
+{
+color: black;
+}
+</style>
 </html>

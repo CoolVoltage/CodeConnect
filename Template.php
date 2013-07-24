@@ -2,7 +2,7 @@
 session_start();
 ?>
 <div class="Matter">
-<img src="Home/logo.png" style="margin-top:-40px;" height="200px" >
+<a href="/CodeConnect"><img src="Home/logo.png" style="margin-top:-40px;" height="200px" ></a>
 <div id="LoginBox">
 <?php
 if(!isset($_SESSION['Nick'])) {
