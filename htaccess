@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^CodeConnect/$ CodeConnect/Home/Home.php [NC,L]
+RewriteRule ^CodeConnect/(.{7,10})?$ CodeConnect/CodeEditor/CodeEditor.php?id=$1 [NC,L]

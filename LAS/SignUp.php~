@@ -83,15 +83,29 @@ request = new XMLHttpRequest();
 	}
 }
 }
-var url="/CodeConnect/LAS/DBsubmit.php?Nick="+document.getElementById("RNick").value+"&Email="+document.getElementById("REmail").value+"&Pass="+document.getElementById("RPass").value;
+var url="LAS/DBsubmit.php?Nick="+document.getElementById("RNick").value+"&Email="+document.getElementById("REmail").value+"&Pass="+document.getElementById("RPass").value+"&RePass="+document.getElementById("RRepass").value;
 request.open("POST",url,true);
 request.onreadystatechange = function () {
 if (request.readyState == 4) {
 							
 				if (request.status == 200) {
+					if (request.responseText!='error') {
 				document.getElementById('SignUpForm').style.display='none';
 				document.getElementById('Replacement').innerHTML="You have successfully registered "+request.responseText+", Login to continue."	
+				setTimeout(function () {
+	document.getElementById('Sheet').style.display="none";
+	document.getElementById('SignUp').style.display="none";
+},4000);
 				}
+					else {
+				var input_tags=document.getElementById('SignUpForm').getElementsByTagName('input');
+				for (i=0;i<(input_tags-2);++i) {
+				input_tags[i].onblur();
+				drawCanvas();
+}
+				input_tags[input_tags.length-2].value="";
+}
+		}
 		}	
 };
 request.send(null);
