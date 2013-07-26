@@ -2,7 +2,7 @@ body
 {
 background-color: lavender;
 }
-#Matter
+.Matter
 {
 width: 1100px;
 margin-left: auto;
@@ -52,4 +52,18 @@ opacity: 0.4;
 #NickDisplay,#NickDisplay a
 {
 color: lightslategray;
+}
+#Notification_list
+{
+position: absolute;
+padding: 5px 0px 0px 0px;
+width: 250px;
+z-index: 20;
+background-color: white;
+}
+#Notification_list a
+{
+	margin-left: 10px;
+color: sienna;
+text-decoration: none;
 }

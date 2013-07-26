@@ -53,3 +53,17 @@ opacity: 0.4;
 {
 color: lightslategray;
 }
+#Notification_list
+{
+position: absolute;
+padding: 5px 0px 0px 0px;
+width: 250px;
+z-index: 20;
+background-color: white;
+}
+#Notification_list a
+{
+	margin-left: 5px;
+color: sienna;
+text-decoration: none;
+}

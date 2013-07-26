@@ -39,10 +39,6 @@ function check() {
 </script>
 <body>
 <?php
-require_once("../Template.php");
-?>
-<div class="Matter">
-<?php
 $html="<!-- DESCRIPTION/READ ME -->";
 $js="//Use Check to validate your javascript code";
 $css="";
@@ -67,6 +63,10 @@ else {
 	echo('<META HTTP-EQUIV="Refresh" Content="0; URL=http://127.0.0.1/CodeConnect/NewCode">');
 }
 }
+require_once("../Template.php");
+?>
+<div class="Matter">
+<?php
 if(isset($_POST['html'])|| isset($_POST['js'])|| isset($_POST['css'])|| isset($_POST['ExternalRes'])) {
 	$html=isset($_POST['html'])?$_POST['html']:$html;
 	$js=isset($_POST['js'])?$_POST['js']:$js;
