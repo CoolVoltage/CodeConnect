@@ -9,7 +9,15 @@ background-color: white;
 <?php
 $iframeid = $_GET['iframeid'];
 session_start();
-$array = $_SESSION['"$iframeid"']; 
+$array = $_SESSION['"$iframeid"'];
+$ExtRes=json_decode($array[3]);
+	foreach($ExtRes as $key => $value)
+	{
+	if($value=="js") 
+	echo("<script src=" . $key . "></script>");
+	else if($value=="css") 
+	echo("<link rel='stylesheet' href=" . $key . "/>");
+	} 
 echo '<style>' . $array[1] . '</style>';
 ?>
 </head>
@@ -18,13 +26,6 @@ echo '<style>' . $array[1] . '</style>';
 </body>
 <?php
 echo '<script>' . $array[2] . '</script>';	
-$ExtRes=json_decode($array[3]);
-	foreach($ExtRes as $key => $value)
-	{
-	if($value=="js") 
-	echo("<script src=" . $key . "></script>");
-	else if($value=="css") 
-	echo("<link rel='stylesheet' href=" . $key . "/>");
-	}
+
 ?>
 </html>

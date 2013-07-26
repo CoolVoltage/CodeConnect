@@ -14,9 +14,15 @@ $query = "INSERT INTO UserInfo(Nick,Email,Password)" .
 "VALUES ('$Nick','$Email',SHA('$Pass'))";
 $result = mysqli_query($dbc, $query)
 or die('<span id="message">Error querying database.</span>');
-echo '1';
+echo $_GET['Nick'];
+}
+else {
+if(is_array(mysqli_fetch_row($result)))
+{
+echo('uerror');
 }
 else {
 echo('error');
+}
 }
 ?>

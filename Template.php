@@ -20,8 +20,24 @@ else {
 <div id="NickDisplay" style="display:block;">
 <span id="NickSpan">Welcome <?php echo $_SESSION['Nick']; ?></span><br>
 <a href="LAS/Logout.php"><i>Sign Out</i></a>
-</div>
 <?php
+if(isset($_SESSION['Notification'])&&$_SESSION['Notification']!='') {
+$notification = $_SESSION['Notification'];
+$count_notifications = explode(',',$notification);
+$notification = array_count_values($count_notifications);
+$count_notifications = sizeof(array_unique($count_notifications));
+if(sizeof($count_notifications)>0) {	
+?>
+<div style="color:red"><?php echo $count_notifications ?> New Notifications</div>
+<div>
+<?php
+	foreach($notification as $key => $value) {
+	echo("<a href='$key'>$value new comments in $key</a>");					
+		} 
+echo('</div>');
+}
+}
+echo('</div>');
 }
 ?>
 </div>

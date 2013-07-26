@@ -10,7 +10,7 @@ window.onload = function () {
 </script>
 <script src="LAS/Home_LAS.js"></script>
 <style>
-#NewCode
+.Links
 {
 color: black;
 font-style: italic;
@@ -70,7 +70,7 @@ width: 100px;
 }
 th:nth-child(2)
 {
-width: 400px;
+width: 500px;
 }
 </style>
 <script>
@@ -139,7 +139,8 @@ $temp6=$OrderByComments[$j];
 }
 ?>
 <div class="Matter">
-<a id='NewCode' href="/CodeConnect/NewCode">Create a New Code!</a>
+<a class='Links' href="/CodeConnect/NewCode">Create a New Code!</a>
+<a class='Links' href="/CodeConnect/Chat">Enter ChatRoom!</a>
 <br>
 <div id="CodeDisplay">
 <div id="DisplayOptions"><span id="Rating" onclick="Change_Display(this);">Highest Rated</span><span id="Date" onclick="Change_Display(this);">Recently Added</span><span id="Popularity" onclick="Change_Display(this);">Most Popular</span><span id="UserId" onclick="Create_DisplayList();">Search By Nick : </span><input type="text" id="Search_Nick"></div>

@@ -90,12 +90,18 @@ if (request.readyState == 4) {
 							
 				if (request.status == 200) {
 					if (request.responseText!='error') {
+				if (request.responseText=="uerror") {
+					document.getElementById('RNickE').style.display="inline";
+					document.getElementById('RNickE').innerHTML="Nick already chosen.Please enter a different Nick";
+}				
+				else {
 				document.getElementById('SignUpForm').style.display='none';
 				document.getElementById('Replacement').innerHTML="You have successfully registered "+request.responseText+", Login to continue."	
 				setTimeout(function () {
 	document.getElementById('Sheet').style.display="none";
 	document.getElementById('SignUp').style.display="none";
 },3000);
+			}
 				}
 					else {
 				var input_tags=document.getElementById('SignUpForm').getElementsByTagName('input');

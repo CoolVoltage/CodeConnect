@@ -10,6 +10,8 @@ $length = mysqli_num_rows($result);
 if($length==1) {
 session_start();
 $_SESSION['Nick']=$Nick;
+$Notification = mysqli_fetch_array($result);
+$_SESSION['Notification']=$Notification[3];
 }
 echo $length;
 ?>
