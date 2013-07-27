@@ -48,22 +48,23 @@ $dbc = mysqli_connect('127.0.0.1', 'root', 'pass', 'CodeConnect')
 or die('<span id="message">Error connecting to MySQL server.</span>');
 $query = "SELECT * FROM CodeSave WHERE id='$id'";
 $result = mysqli_query($dbc,$query);
-$result = mysqli_fetch_row($result);
-if(isset($result)) {
-	$Owner= $result[0];
-	if(!(isset($_POST['submit']))) {
-	$html = $result[1];
-	$js = $result[2];
-	$css = $result[3];	
-	$ExtRes =$result[4];
-	$Descp = $result[8];
+$Result = mysqli_fetch_row($result);
+if(isset($Result)) {
+	$Owner= $Result[0];
+	if(!(isset($_POST['submit']))|| isset($_POST['Version'])) {
+	$html = $Result[1];
+	$js = $Result[2];
+	$css = $Result[3];	
+	$ExtRes =$Result[4];
+	$Descp = $Result[8];
+	$Count_Versions = $Result[9];
 }
 }
 else {
 	echo('<META HTTP-EQUIV="Refresh" Content="0; URL=http://127.0.0.1/CodeConnect/NewCode">');
 }
 }
-
+$Version = (!isset($_POST['Version']))?$Result[9]:$_POST['Version'];
 require_once("../Template.php");
 ?>
 <div class="Matter">
@@ -77,12 +78,13 @@ if(isset($_POST['html'])|| isset($_POST['js'])|| isset($_POST['css'])|| isset($_
 	$ExtRes=$_POST['ExternalRes'];
 	}	
 	//$ExtRes=isset($_POST['ExternalRes'])?$_POST['ExternalRes']:$ExtRes;
-	require_once("codeSave.php");
+require_once("codeSave.php");
 	}
-$Ext = json_decode($ExtRes);
+$Ext = json_decode($ExtRes);	
 	?>
 <script>
 <?php
+
 if ($ExtRes!='') {
 	//$ExtRes = json_encode($ExtRes);
 ?>
@@ -94,9 +96,30 @@ ExternalResource = eval(ExternalResources);
 html = <?php echo json_encode($html);?>;
 js = <?php echo json_encode($js);?>;
 css = <?php echo json_encode($css);?>;
+version = eval(<?php echo json_encode($Version);?>);
+<?php if(!isset($_POST['submit'])|| isset($_POST['Version'])) { ?>	
+	if (version) {
+		html = eval(<?php echo($Result[1]);?>);
+		js = eval(<?php echo($Result[2]);?>);
+		css = eval(<?php echo($Result[3]);?>);
+	var i=1;
+	while (!html[version-i]&&i<=version)
+	i++;	
+	html=html[version-i]?html[version-i]:'<!-- DESCRIPTION/READ ME -->';
+	var i=1;
+	while (!js[version-i]&&i<=version)
+	i++;	
+	js=js[version-i]?js[version-i]:'//Use Check to validate your javascript code';
+	var i=1;
+	while (!css[version-i]&&i<=version)
+	i++;	
+	css=css[version-i]?css[version-i]:'';
+}
+<?php } ?>
 </script>
 <?php	
-$iframe = [$html,$css,$js,$_POST['ExternalRes']];
+$iframe = [$Result[1],$Result[3],$Result[2],$_POST['ExternalRes'],$Version,$_POST['submit']];
+//print_r($iframe);
 $iframeid = rand(10000, 99999);
 session_start();
 while(isset($_SESSION[$iframeid]))
@@ -215,6 +238,19 @@ height: 30px;
 }
 </style>
 <form name="MyForm" action=<?php echo($_GET['id']);?> method="POST">
+<?php
+if($_GET['id']!='NewCode') {
+	echo $_POST['Version'];
+	$temp = Count_Versions;		
+		echo("<select name='Version'>");	
+		while($temp) {
+			echo("<option value='$temp'>$temp</option>");
+			$temp--;
+		}
+	echo("</select>");
+//	echo("<input type='hidden' name='Version' value=".$temp.">");
+}
+?>
 <input class="cbutton" id="submit" type="submit" name="submit" value="Submit" >
 <?php
 if(($_SESSION['Nick']==$Owner||$_GET['id']=="NewCode") && isset($_SESSION['Nick']))  {?>
