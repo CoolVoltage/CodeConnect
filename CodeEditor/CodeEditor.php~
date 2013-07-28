@@ -51,36 +51,53 @@ $result = mysqli_query($dbc,$query);
 $Result = mysqli_fetch_row($result);
 if(isset($Result)) {
 	$Owner= $Result[0];
-	if(!(isset($_POST['submit']))|| isset($_POST['Version'])) {
-	$html = $Result[1];
-	$js = $Result[2];
-	$css = $Result[3];	
+	if(!($_POST['Version']==''&&isset($_POST['Version']))) {
+	$Vhtml = json_decode($Result[1]);
+	$Vjs = json_decode($Result[2]);
+	$Vcss = json_decode($Result[3]);	
 	$ExtRes =$Result[4];
 	$Descp = $Result[8];
-	$Count_Versions = $Result[9];
-}
+	$Count_Versions = (isset($_POST['Version'])&& $_POST['Version']!='')?$_POST['Version']:$Result[9];	
+	$Vhtml=$Vhtml[$Count_Versions-1];
+	$Vjs=$Vjs[$Count_Versions-1];
+	$Vcss=$Vcss[$Count_Versions-1];
+	echo $Vjs;
+	$query = "SELECT html FROM $id WHERE version='$Vhtml'";
+	$result=mysqli_query($dbc,$query);
+	$Html=mysqli_fetch_row($result);
+	//$html=json_encode($result[0]);
+	$query = "SELECT js FROM $id WHERE version='$Vjs'";
+	$result=mysqli_query($dbc,$query);
+	$Js=mysqli_fetch_row($result);
+	//$js=json_encode($result[0]);
+	$query = "SELECT css FROM $id WHERE version='$Vcss'";
+	$result=mysqli_query($dbc,$query);
+	$Css=mysqli_fetch_row($result);
+	//$css=json_encode($result[0]);
+	}
 }
 else {
 	echo('<META HTTP-EQUIV="Refresh" Content="0; URL=http://127.0.0.1/CodeConnect/NewCode">');
 }
 }
-$Version = (!isset($_POST['Version']))?$Result[9]:$_POST['Version'];
+//$Version = (!isset($_POST['Version']))?$Result[9]:$_POST['Version'];
 require_once("../Template.php");
 ?>
 <div class="Matter">
 <?php
-if(isset($_POST['html'])|| isset($_POST['js'])|| isset($_POST['css'])|| isset($_POST['ExternalRes'])) {
-	$html=isset($_POST['html'])?$_POST['html']:$html;
-	$js=isset($_POST['js'])?$_POST['js']:$js;
-	$css=isset($_POST['css'])?$_POST['css']:$css;
+//if(isset($_POST['html'])|| isset($_POST['js'])|| isset($_POST['css'])|| isset($_POST['ExternalRes'])) {
+	//echo((!isset($_POST['Version'])&&isset($_POST['submit'])));	
+	$html=(isset($_POST['Version'])&&$_POST['Version']=='')?$_POST['html']:(isset($Html[0])?$Html[0]:$html);	
+	$js=(isset($_POST['Version'])&&$_POST['Version']=='')?$_POST['js']:(isset($Js[0])?$Js[0]:$js);
+	$css=(isset($_POST['Version'])&&$_POST['Version']=='')?$_POST['css']:(isset($Css[0])?$Css[0]:$css);
 	$Descp = isset($_POST['Description'])?$_POST['Description']:$Descp;
 	if(!isset($ExtRes)) {	
 	$ExtRes=$_POST['ExternalRes'];
-	}	
+	//}	
 	//$ExtRes=isset($_POST['ExternalRes'])?$_POST['ExternalRes']:$ExtRes;
 require_once("codeSave.php");
 	}
-$Ext = json_decode($ExtRes);	
+$Ext = json_decode($ExtRes);		
 	?>
 <script>
 <?php
@@ -97,28 +114,57 @@ html = <?php echo json_encode($html);?>;
 js = <?php echo json_encode($js);?>;
 css = <?php echo json_encode($css);?>;
 version = eval(<?php echo json_encode($Version);?>);
-<?php if(!isset($_POST['submit'])|| isset($_POST['Version'])) { ?>	
-	if (version) {
-		html = eval(<?php echo($Result[1]);?>);
-		js = eval(<?php echo($Result[2]);?>);
-		css = eval(<?php echo($Result[3]);?>);
-	var i=1;
-	while (!html[version-i]&&i<=version)
-	i++;	
-	html=html[version-i]?html[version-i]:'<!-- DESCRIPTION/READ ME -->';
-	var i=1;
-	while (!js[version-i]&&i<=version)
-	i++;	
-	js=js[version-i]?js[version-i]:'//Use Check to validate your javascript code';
-	var i=1;
-	while (!css[version-i]&&i<=version)
-	i++;	
-	css=css[version-i]?css[version-i]:'';
-}
-<?php } ?>
 </script>
+<?php if((!isset($_POST['submit'])||(isset($_POST['Version'])&&$_POST['Version']!=''))&&$_GET['id']!='NewCode') { 
+/*$temp=0;
+$temp_version = $Version-1;
+foreach($css as $key => $value)
+{
+if($key>=$temp_version) {
+	$css= $key==$temp_version?$value:$css;
+	break;
+}
+if($key>=$temp)
+$temp=$key;
+$css=$value;
+}
+$temp=0;
+foreach($html as $key => $value)
+{
+if($key>=$temp_version) {
+	$html= $key==$temp_version?$value:$html;
+	break;
+}
+if($key>=$temp)
+$temp=$key;
+$html=$value;
+}
+$temp=0;
+foreach($js as $key => $value)
+{
+if($key>=$temp_version) {
+	$js= $key==$temp_version?$value:$js;
+	break;
+}
+if($key>=$temp)
+$temp=$key;
+}
+//echo $value;
+*/?>
+<script>
+/*html = <?php echo json_encode($Html[0]);?>;
+js = <?php echo json_encode($Js[0]);?>;
+css = <?php echo json_encode($Css[0]);?>;*/
+</script>
+<?php } 
+?>
 <?php	
-$iframe = [$Result[1],$Result[3],$Result[2],$_POST['ExternalRes'],$Version,$_POST['submit']];
+/*if((!isset($_POST['submit'])||(isset($_POST['Version'])&&$_POST['Version']!=''))&&$_GET['id']!='NewCode') {
+$iframe = [$Html[0],$Css[0],$Js[0],$_POST['ExternalRes'],$Version,$_POST['submit']];
+}
+else{*/
+$iframe = [$html,$css,$js,$_POST['ExternalRes'],$Version,$_POST['submit']];
+//}
 //print_r($iframe);
 $iframeid = rand(10000, 99999);
 session_start();
@@ -238,11 +284,19 @@ height: 30px;
 }
 </style>
 <form name="MyForm" action=<?php echo($_GET['id']);?> method="POST">
+<input class="cbutton" id="submit" type="submit" name="submit" value="Submit" >
+<?php
+if(($_SESSION['Nick']==$Owner||$_GET['id']=="NewCode") && isset($_SESSION['Nick']))  {?>
+<input class="cbutton" type="submit" name="save" value="Save">
+<?php } if($_SESSION['Nick']) { ?><input class="cbutton" type="button" value="Fork" onclick="document.MyForm.action='NewCode';document.getElementById('submit').click();"> <?php } ?>
+<input class="cbutton" type="button" name="Check" value="Check" onclick="check();">
 <?php
 if($_GET['id']!='NewCode') {
-	echo $_POST['Version'];
-	$temp = Count_Versions;		
-		echo("<select name='Version'>");	
+	echo("<label>Version:</label>");
+	$temp = $Result[9];		
+	echo($_POST['Version']?$_POST['Version']:$temp);	
+		echo("<select name='Version' onchange=document.getElementById('submit').click()>");
+		echo("<option value=''></option>");	
 		while($temp) {
 			echo("<option value='$temp'>$temp</option>");
 			$temp--;
@@ -250,13 +304,7 @@ if($_GET['id']!='NewCode') {
 	echo("</select>");
 //	echo("<input type='hidden' name='Version' value=".$temp.">");
 }
-?>
-<input class="cbutton" id="submit" type="submit" name="submit" value="Submit" >
-<?php
-if(($_SESSION['Nick']==$Owner||$_GET['id']=="NewCode") && isset($_SESSION['Nick']))  {?>
-<input class="cbutton" type="submit" name="save" value="Save">
-<?php } if($_SESSION['Nick']) { ?><input class="cbutton" type="button" value="Fork" onclick="document.MyForm.action='NewCode';document.getElementById('submit').click();"> <?php } ?>
-<input class="cbutton" type="button" name="Check" value="Check" onclick="check();"><br><br>
+?><br><br>
 <?php if($html ||$js ||$css || $ExtRes) { ?><iframe id="iframe" src="CodeEditor/iframe.php?iframeid=<?php echo $iframeid; ?>"></iframe><br><?php }?>
 <label>HTML</label><textarea id="html" name="html"></textarea><br>
 <label>JS</label><textarea id="js" name="js"></textarea><br>

@@ -10,14 +10,45 @@ background-color: white;
 $iframeid = $_GET['iframeid'];
 session_start();
 $array = $_SESSION['"$iframeid"'];
-$Version = $array[4];
-$html=$array[0];
-$js = $array[2];
-$css = $array[1];
-if(!isset($array[5])||$Version) {
-$html = json_decode($array[0]);
-$js = json_decode($array[2]);
-$css = json_decode($array[1]);
+/*$Version = $array[4];
+if(!isset($array[5])||$Version!='') {
+$html1 = json_decode($array[0]);
+$js1 = json_decode($array[2]);
+$css1 = json_decode($array[1]);
+$temp=0;
+$Version--;
+foreach($css1 as $key => $value)
+{
+if($key>=$Version) {
+	$css= $key==$Version?$value:$css;
+	break;
+}
+if($key>=$temp)
+$temp=$key;
+$css=$value;
+}
+$temp=0;
+foreach($html1 as $key => $value)
+{
+if($key>=$Version) {
+	$html= $key==$Version?$value:$html;
+	break;
+}
+if($key>=$temp)
+$temp=$key;
+$html=$value;
+}
+$temp=0;
+foreach($js1 as $key => $value)
+{
+if($key>=$Version) {
+	$js= $key==$Version?$value:$js;
+	break;
+}
+if($key>=$temp)
+$temp=$key;
+$js=$value;
+}
 $i=1;
 while(!isset($html[$Version-$i])&&$i<=$Version)
 $i++;
@@ -27,10 +58,16 @@ while(!isset($js[$Version-$i])&&$i<=$Version)
 $i++;
 $js = isset($js[$Version-$i])?$js[$Version-$i]:'';
 $i=1;
-while(!isset($css[$Version-$i])&&$i<=$Version)
+while(!isset($css1[$Version-$i])&&$i<=$Version)
 $i++;
-$css = isset($css[$Version-$i])?$css[$Version-$i]:'';
+$css = isset($css1[$Version-$i])?$css1[$Version-$i]:'';
 }
+else {
+$html=$array[0];
+$js = $array[2];
+$css = $array[1];
+}*/
+
 $ExtRes=json_decode($array[3]);
 	foreach($ExtRes as $key => $value)
 	{
@@ -39,14 +76,14 @@ $ExtRes=json_decode($array[3]);
 	else if($value=="css") 
 	echo("<link rel='stylesheet' href=" . $key . "/>");
 	} 
-echo '<style>' . $css . '</style>';
+echo '<style>' . $array[1] . '</style>';
 ?>
 </head>
 <body>
-<?php echo $html; ?>
+<?php echo $array[0] ?>
 </body>
 <?php
-echo '<script>' . $js . '</script>';	
+echo '<script>' . $array[2] . '</script>';	
 
 ?>
 </html>
