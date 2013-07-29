@@ -51,16 +51,20 @@ $result = mysqli_query($dbc,$query);
 $Result = mysqli_fetch_row($result);
 if(isset($Result)) {
 	$Owner= $Result[0];
-	if(!($_POST['Version']==''&&isset($_POST['Version']))) {
+	if(!($_POST['Version']==''&&isset($_POST['Version']))||!(isset($_POST['Html_Version'])&& $_POST['Html_Version']=='')||!(isset($_POST['Js_Version'])&& $_POST['Js_Version']=='')||!(isset($_POST['Css_Version'])&& $_POST['Css_Version']=='')) {
 	$Vhtml = json_decode($Result[1]);
 	$Vjs = json_decode($Result[2]);
 	$Vcss = json_decode($Result[3]);	
 	$ExtRes =$Result[4];
 	$Descp = $Result[8];
+	$Count_Versions_Html = $Vhtml[$Result[9]-1];
+	$Count_Versions_Js = $Vjs[$Result[9]-1];	
+	$Count_Versions_Css = $Vcss[$Result[9]-1];
+	//echo $Count_Versions_Html;
 	$Count_Versions = (isset($_POST['Version'])&& $_POST['Version']!='')?$_POST['Version']:$Result[9];	
-	$Vhtml=$Vhtml[$Count_Versions-1];
-	$Vjs=$Vjs[$Count_Versions-1];
-	$Vcss=$Vcss[$Count_Versions-1];
+	$Vhtml= (isset($_POST['Html_Version'])&& $_POST['Html_Version']!='')?$Vhtml[$_POST['Html_Version']-1]:$Vhtml[$Count_Versions-1];
+	$Vjs=(isset($_POST['Js_Version'])&& $_POST['Js_Version']!='')?$Vjs[$_POST['Js_Version']-1]:$Vjs[$Count_Versions-1];
+	$Vcss=(isset($_POST['Css_Version'])&& $_POST['Css_Version']!='')?$Vcss[$_POST['Css_Version']-1]:$Vcss[$Count_Versions-1];
 	$query = "SELECT html FROM $id WHERE version='$Vhtml'";
 	$result=mysqli_query($dbc,$query);
 	$Html=mysqli_fetch_row($result);
@@ -86,16 +90,16 @@ require_once("../Template.php");
 <?php
 //if(isset($_POST['html'])|| isset($_POST['js'])|| isset($_POST['css'])|| isset($_POST['ExternalRes'])) {
 	//echo((!isset($_POST['Version'])&&isset($_POST['submit'])));	
-	$html=(isset($_POST['Version'])&&$_POST['Version']=='')?$_POST['html']:(isset($Html[0])?$Html[0]:$html);	
-	$js=(isset($_POST['Version'])&&$_POST['Version']=='')?$_POST['js']:(isset($Js[0])?$Js[0]:$js);
-	$css=(isset($_POST['Version'])&&$_POST['Version']=='')?$_POST['css']:(isset($Css[0])?$Css[0]:$css);
+	$html=((isset($_POST['Html_Version'])&&$_POST['Html_Version']=='')&&(isset($_POST['Version'])&&$_POST['Version']=='')||($_GET['id']=='NewCode'&&(isset($_POST['submit'])|| isset($_POST['save']))))?$_POST['html']:(isset($Html[0])?$Html[0]:$html);	
+	$js=((isset($_POST['Js_Version'])&&$_POST['Js_Version']=='')&&(isset($_POST['Version'])&&$_POST['Version']=='')||($_GET['id']=='NewCode'&&(isset($_POST['submit'])|| isset($_POST['save']))))?$_POST['js']:(isset($Js[0])?$Js[0]:$js);
+	$css=((isset($_POST['Css_Version'])&&$_POST['Css_Version']=='')&&(isset($_POST['Version'])&&$_POST['Version']=='')||($_GET['id']=='NewCode'&&(isset($_POST['submit'])|| isset($_POST['save']))))?$_POST['css']:(isset($Css[0])?$Css[0]:$css);
 	$Descp = isset($_POST['Description'])?$_POST['Description']:$Descp;
 	if(!isset($ExtRes)) {	
 	$ExtRes=$_POST['ExternalRes'];
 	//}	
 	//$ExtRes=isset($_POST['ExternalRes'])?$_POST['ExternalRes']:$ExtRes;
-require_once("codeSave.php");
 	}
+require_once("codeSave.php");
 $Ext = json_decode($ExtRes);		
 	?>
 <script>
@@ -289,11 +293,12 @@ if(($_SESSION['Nick']==$Owner||$_GET['id']=="NewCode") && isset($_SESSION['Nick'
 <input class="cbutton" type="submit" name="save" value="Save">
 <?php } if($_SESSION['Nick']) { ?><input class="cbutton" type="button" value="Fork" onclick="document.MyForm.action='NewCode';document.getElementById('submit').click();"> <?php } ?>
 <input class="cbutton" type="button" name="Check" value="Check" onclick="check();">
+<div id="Version_Controller">
 <?php
 if($_GET['id']!='NewCode') {
 	echo("<label>Version:</label>");
 	$temp = $Result[9];		
-	echo($_POST['Version']?$_POST['Version']:$temp);	
+	echo(isset($_POST['Version'])?($_POST['Version']?$_POST['Version']:'Edit in Progress'):$temp);	
 		echo("<select name='Version' onchange=document.getElementById('submit').click()>");
 		echo("<option value=''></option>");	
 		while($temp) {
@@ -301,9 +306,40 @@ if($_GET['id']!='NewCode') {
 			$temp--;
 		}
 	echo("</select>");
-//	echo("<input type='hidden' name='Version' value=".$temp.">");
+	echo("<label>HTML:</label>");
+	echo(isset($_POST['Html_Version'])?($_POST['Html_Version']?$_POST['Html_Version']:''):$Count_Versions_Html);
+	echo("<select name='Html_Version'>");
+		echo("<option value=''></option>");	
+		while($Count_Versions_Html) {
+			echo("<option value='$Count_Versions_Html'>$Count_Versions_Html</option>");
+			$Count_Versions_Html--;
+		}
+	echo("</select>");
+
+	echo("<label>JS:</label>");
+	echo(isset($_POST['Js_Version'])?($_POST['Js_Version']?$_POST['Js_Version']:''):$Count_Versions_Js);
+	echo("<select name='Js_Version'>");
+		echo("<option value=''></option>");	
+		while($Count_Versions_Js) {
+			echo("<option value='$Count_Versions_Js'>$Count_Versions_Js</option>");
+			$Count_Versions_Js--;
+		}
+	echo("</select>");
+
+	echo("<label>CSS:</label>");
+	echo(isset($_POST['Css_Version'])?($_POST['Css_Version']?$_POST['Css_Version']:''):$Count_Versions_Css);
+	echo("<select name='Css_Version'>");
+		echo("<option value=''></option>");	
+		while($Count_Versions_Css) {
+			echo("<option value='$Count_Versions_Css'>$Count_Versions_Css</option>");
+			$Count_Versions_Css--;
+		}
+	echo("</select>");
 }
-?><br><br>
+?>
+
+</div>
+<hr>
 <?php if($html ||$js ||$css || $ExtRes) { ?><iframe id="iframe" src="CodeEditor/iframe.php?iframeid=<?php echo $iframeid; ?>"></iframe><br><?php }?>
 <label>HTML</label><textarea id="html" name="html"></textarea><br>
 <label>JS</label><textarea id="js" name="js"></textarea><br>
@@ -339,15 +375,16 @@ echo("<span id='EditDescp' onclick='EditDesp()' style='color:blue;font-size:70%;
 ?>
 <hr>
 <?php
-if($_SESSION['Nick']) {
+if($_SESSION['Nick']&&$_GET['id']!='NewCode') {
 ?>
 <div id="Rating"><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ><img src="CodeEditor/Wstar.png" alt="" ></div>
 <?php
 }
 else {
-?>
-<span id="Rating_login" style="color:black;font-size:15px;"><i><b>Please Login to Rate</b></i></span><br>
-<?php
+	if(!isset($_SESSION['Nick'])) 
+echo('<span id="Rating_login" style="color:black;font-size:15px;"><i><b>Please Login to Rate</b></i></span><br>');
+	else 
+echo('<span id="Rating_login" style="color:black;font-size:15px;"><i><b>Please Save to Rate</b></i></span><br>');
 }
 ?>
 <div><b><span id="Rated" style="color:gold;font-size:20px;"></span><div id="SRated" style="overflow:hidden;width:96px;"><img src="CodeEditor/5star.png" style="height:20px;" alt="" ></div></b></div>
