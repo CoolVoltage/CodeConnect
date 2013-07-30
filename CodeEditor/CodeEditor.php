@@ -57,9 +57,9 @@ if(isset($Result)) {
 	$Vcss = json_decode($Result[3]);	
 	$ExtRes =$Result[4];
 	$Descp = $Result[8];
-	$Count_Versions_Html = $Vhtml[$Result[9]-1];
-	$Count_Versions_Js = $Vjs[$Result[9]-1];	
-	$Count_Versions_Css = $Vcss[$Result[9]-1];
+	$Count_Versions_Html = array_unique($Vhtml);
+	$Count_Versions_Js = array_unique($Vjs);	
+	$Count_Versions_Css = array_unique($Vcss);
 	//echo $Count_Versions_Html;
 	$Count_Versions = (isset($_POST['Version'])&& $_POST['Version']!='')?$_POST['Version']:$Result[9];	
 	$Vhtml= (isset($_POST['Html_Version'])&& $_POST['Html_Version']!='')?$Vhtml[$_POST['Html_Version']-1]:$Vhtml[$Count_Versions-1];
@@ -77,13 +77,15 @@ if(isset($Result)) {
 	$result=mysqli_query($dbc,$query);
 	$Css=mysqli_fetch_row($result);
 	//$css=json_encode($result[0]);
+	$query="SELECT version,Commit FROM $id";
+	$result=mysqli_query($dbc,$query);
+	$Commits = $result;	
 	}
 }
 else {
 	echo('<META HTTP-EQUIV="Refresh" Content="0; URL=http://127.0.0.1/CodeConnect/NewCode">');
 }
 }
-//$Version = (!isset($_POST['Version']))?$Result[9]:$_POST['Version'];
 require_once("../Template.php");
 ?>
 <div class="Matter">
@@ -118,55 +120,8 @@ js = <?php echo json_encode($js);?>;
 css = <?php echo json_encode($css);?>;
 version = eval(<?php echo json_encode($Version);?>);
 </script>
-<?php if((!isset($_POST['submit'])||(isset($_POST['Version'])&&$_POST['Version']!=''))&&$_GET['id']!='NewCode') { 
-/*$temp=0;
-$temp_version = $Version-1;
-foreach($css as $key => $value)
-{
-if($key>=$temp_version) {
-	$css= $key==$temp_version?$value:$css;
-	break;
-}
-if($key>=$temp)
-$temp=$key;
-$css=$value;
-}
-$temp=0;
-foreach($html as $key => $value)
-{
-if($key>=$temp_version) {
-	$html= $key==$temp_version?$value:$html;
-	break;
-}
-if($key>=$temp)
-$temp=$key;
-$html=$value;
-}
-$temp=0;
-foreach($js as $key => $value)
-{
-if($key>=$temp_version) {
-	$js= $key==$temp_version?$value:$js;
-	break;
-}
-if($key>=$temp)
-$temp=$key;
-}
-//echo $value;
-*/?>
-<script>
-/*html = <?php echo json_encode($Html[0]);?>;
-js = <?php echo json_encode($Js[0]);?>;
-css = <?php echo json_encode($Css[0]);?>;*/
-</script>
-<?php } 
-?>
 <?php	
-/*if((!isset($_POST['submit'])||(isset($_POST['Version'])&&$_POST['Version']!=''))&&$_GET['id']!='NewCode') {
-$iframe = [$Html[0],$Css[0],$Js[0],$_POST['ExternalRes'],$Version,$_POST['submit']];
-}
-else{*/
-$iframe = [$html,$css,$js,$_POST['ExternalRes'],$Version,$_POST['submit']];
+$iframe = [$html,$css,$js,$ExtRes,$Version,$_POST['submit']];
 //}
 //print_r($iframe);
 $iframeid = rand(10000, 99999);
@@ -176,6 +131,10 @@ $iframeid = rand(10000, 99999);
 $_SESSION['"$iframeid"']=$iframe;
 ?>
 <style>
+#Version_Controller
+{
+font-family: Comic Sans MS;
+}
 #Description
 {
 width: 450px;
@@ -285,18 +244,39 @@ background-color: #ccc;
 width: 30px;
 height: 30px;
 }
+#Commits
+{
+	font-family: Comic Sans MS;
+	box-shadow: 5px 5px 5px #777;
+	border-radius:10px;
+	border : thin solid lavender;
+position: absolute;
+right: -50px;
+z-index: 20;
+background-color: lavenderblush;
+color: black;
+top: 0;
+padding: 2px;
+width: 200px;
+word-wrap: break-word;
+}
+#Version_Controller
+{
+position: relative;
+}
 </style>
 <form name="MyForm" action=<?php echo($_GET['id']);?> method="POST">
 <input class="cbutton" id="submit" type="submit" name="submit" value="Submit" >
 <?php
 if(($_SESSION['Nick']==$Owner||$_GET['id']=="NewCode") && isset($_SESSION['Nick']))  {?>
-<input class="cbutton" type="submit" name="save" value="Save">
+<input class="cbutton" type="button" value="Save/Push" onclick="Form_Save();">
+<input id="Push_Button" style="display:none" type="submit" name="save" value="Save">
 <?php } if($_SESSION['Nick']) { ?><input class="cbutton" type="button" value="Fork" onclick="document.MyForm.action='NewCode';document.getElementById('submit').click();"> <?php } ?>
 <input class="cbutton" type="button" name="Check" value="Check" onclick="check();">
 <div id="Version_Controller">
 <?php
 if($_GET['id']!='NewCode') {
-	echo("<label>Version:</label>");
+	echo("<label>Version: </label>");
 	$temp = $Result[9];		
 	echo(isset($_POST['Version'])?($_POST['Version']?$_POST['Version']:'Edit in Progress'):$temp);	
 		echo("<select name='Version' onchange=document.getElementById('submit').click()>");
@@ -306,38 +286,45 @@ if($_GET['id']!='NewCode') {
 			$temp--;
 		}
 	echo("</select>");
-	echo("<label>HTML:</label>");
-	echo(isset($_POST['Html_Version'])?($_POST['Html_Version']?$_POST['Html_Version']:''):$Count_Versions_Html);
+	echo('&nbsp');		
+	echo("<label>HTML: </label>");
+	echo(isset($_POST['Html_Version'])?($_POST['Html_Version']?$_POST['Html_Version']:''):end($Count_Versions_Html));
 	echo("<select name='Html_Version'>");
 		echo("<option value=''></option>");	
-		while($Count_Versions_Html) {
-			echo("<option value='$Count_Versions_Html'>$Count_Versions_Html</option>");
-			$Count_Versions_Html--;
+		foreach($Count_Versions_Html as $temp) {
+			echo("<option value='$temp'>$temp</option>");
 		}
 	echo("</select>");
-
-	echo("<label>JS:</label>");
-	echo(isset($_POST['Js_Version'])?($_POST['Js_Version']?$_POST['Js_Version']:''):$Count_Versions_Js);
+	echo('&nbsp');
+	echo("<label>JS: </label>");
+	echo(isset($_POST['Js_Version'])?($_POST['Js_Version']?$_POST['Js_Version']:''):end($Count_Versions_Js));
 	echo("<select name='Js_Version'>");
 		echo("<option value=''></option>");	
-		while($Count_Versions_Js) {
-			echo("<option value='$Count_Versions_Js'>$Count_Versions_Js</option>");
-			$Count_Versions_Js--;
+		foreach($Count_Versions_Js as $temp) {
+			echo("<option value='$temp'>$temp</option>");
 		}
 	echo("</select>");
-
-	echo("<label>CSS:</label>");
-	echo(isset($_POST['Css_Version'])?($_POST['Css_Version']?$_POST['Css_Version']:''):$Count_Versions_Css);
+	echo('&nbsp');
+	echo("<label>CSS: </label>");
+	echo(isset($_POST['Css_Version'])?($_POST['Css_Version']?$_POST['Css_Version']:''):end($Count_Versions_Css));
 	echo("<select name='Css_Version'>");
 		echo("<option value=''></option>");	
-		while($Count_Versions_Css) {
-			echo("<option value='$Count_Versions_Css'>$Count_Versions_Css</option>");
-			$Count_Versions_Css--;
+		foreach($Count_Versions_Css as $temp) {
+			echo("<option value='$temp'>$temp</option>");
 		}
 	echo("</select>");
+echo('&nbsp<img id="Commit_help" src="CodeEditor/exclamation.jpeg" alt="" >');
 }
 ?>
-
+<div style="display:none;" id="Commits">
+<?php
+while($commit = mysqli_fetch_row($Commits)) {
+if($commit!=null) {
+echo("<span class='Commit_version'>Version $commit[0] : </span><span class='Commit_value'>$commit[1]</span><br>");
+}
+}
+?>
+</div>
 </div>
 <hr>
 <?php if($html ||$js ||$css || $ExtRes) { ?><iframe id="iframe" src="CodeEditor/iframe.php?iframeid=<?php echo $iframeid; ?>"></iframe><br><?php }?>
@@ -403,12 +390,23 @@ echo('<span id="Rating_login" style="color:black;font-size:15px;"><i><b>Please S
 <br>
 <br>
 <hr>
+<br>
 <div id="Comments">
-<?php session_start();if($_GET['id']=="NewCode"){echo("<h4><i>Save to Comment</i></h4>"); } else if(isset($_SESSION['Nick'])){ ?><textarea id="CommentInput" style="width:440px;resize: none;"></textarea><?php }else echo("<h4><i>Please Login to Comment</i></h4>");?>
+<?php session_start();if($_GET['id']=="NewCode"){echo("<h4><i>Save to Comment</i></h4>"); } else if(isset($_SESSION['Nick'])){ ?><textarea id="CommentInput" style="width:440px;resize: none;"></textarea><img src="CodeEditor/plus.png" style="cursor:pointer;" onclick="Add_Comment();"><?php }else echo("<h4><i>Please Login to Comment</i></h4>");?>
 </div>
 </div>
+<?php
+if(isset($_POST['save'])) {
+echo('<center><img src="CodeEditor/8.gif" style="margin-top:300px;" width="60px"></center>');
+}
+?>
 </body>
 <script>
+function Form_Save() {
+	document.getElementById('Push_Button').value = prompt("Please Enter Commit Name","NIL");
+if(document.getElementById('Push_Button').value!='')
+document.getElementById('Push_Button').click();
+}
 function EditDesp() {
 	document.getElementById("Description").innerHTML= prompt("Please Enter Description","Description");
 	document.getElementById("Describe").value=document.getElementById("Description").innerHTML;
@@ -441,15 +439,16 @@ if (Request.readyState == 4) {
 					
 				var pack = Request.responseText;
 				comments = pack.split(";;");		
-	while (document.getElementById('Comments').firstChild.nextSibling.nextSibling)
-	document.getElementById('Comments').removeChild(document.getElementById('Comments').firstChild.nextSibling.nextSibling);
+	while (document.getElementById('Comments').firstChild.nextSibling.nextSibling.nextSibling)
+	document.getElementById('Comments').removeChild(document.getElementById('Comments').firstChild.nextSibling.nextSibling.nextSibling);
 	for(var i=0;i<comments.length-1;++i)
 	{
 	Comment = comments[i].split(":::");
 	var Nickname = Comment[0];
 	var userNick=document.createElement('b');
 	userNick.innerHTML=Nickname;	
-	var comment =document.createElement('text');
+	var comment =document.createElement('text');	2	
+	//Comment[2]=Comment[2].replace('\"','"');
 	comment.innerHTML=Comment[2];
 	var span = document.createElement('span');
 	var time = document.createElement('b');
@@ -609,12 +608,11 @@ document.getElementById('ExternalRes').value=JSON.stringify(ExternalResource);
 
 document.getElementById('Description').innerHTML= <?php echo json_encode($Descp);?>;
 document.getElementById('Describe').value=document.getElementById('Description').innerHTML;
+$("#Commit_help").hover(function () {
+	document.getElementById('Commits').style.display='block';
+},function () {
+	document.getElementById('Commits').style.display='none';
+});
 }
 </script>
-<style>
-body
-{
-color: black;
-}
-</style>
 </html>

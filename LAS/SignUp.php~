@@ -89,8 +89,11 @@ request.onreadystatechange = function () {
 if (request.readyState == 4) {
 							
 				if (request.status == 200) {
+					alert(request.responseText);
 					if (request.responseText!='error') {
+						alert('ent');
 				if (request.responseText=="uerror") {
+					alert('yo');
 					document.getElementById('RNickE').style.display="inline";
 					document.getElementById('RNickE').innerHTML="Nick already chosen.Please enter a different Nick";
 }				

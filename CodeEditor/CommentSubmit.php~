@@ -7,17 +7,21 @@ $id = $_GET['id'];
 if($id!="NewCode") {
 $dbc = mysqli_connect('127.0.0.1', 'root', 'pass', 'CodeConnect')
 or die('<span id="message">Error connecting to MySQL server.</span>');
-$query="SELECT Comments FROM CodeSave WHERE id='$id'";
+$query="SELECT Comments,nick FROM CodeSave WHERE id='$id'";
 $result = mysqli_query($dbc,$query)
 or die('<span id="message">Error connecting to MySQL server.</span>');
 $result = mysqli_fetch_array($result);
 $comments = $result[0];
+$Owner = $result[1];
 $query="SELECT Notification FROM UserInfo,CodeSave WHERE CodeSave.nick=UserInfo.Nick AND id='$id'";
 $result =mysqli_query($dbc,$query);
 $notification = mysqli_fetch_row($result);
 if(isset($Nick)&&$comment) {
-	$notification[0] = isset($notification[0])?(',' . $notification[0] . $id):($notification[0] . $id);
+	if($Nick!=$Owner) {
+	$notification[0] = isset($notification[0])?($notification[0]. ',' . $id):($notification[0] . $id);
+}
 if(!isset($comments)) {$comments="";}
+$comment = str_replace("'","&apostophe", $comment);
 $comments = $comments . $Nick . ':::' . $time . ':::' . $comment . ';;';
 $query ="UPDATE CodeSave SET Comments='$comments'" .
 "WHERE id='$id'";
@@ -29,5 +33,6 @@ $result = mysqli_query($dbc,$query)
 or die('<span id="message">Error conndfdecting to MySQL server.</span>');
 }
 }
+$comments = str_replace("&apostophe","'", $comments);
 echo(json_encode($comments));
 ?>

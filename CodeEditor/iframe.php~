@@ -76,15 +76,14 @@ $ExtRes=json_decode($array[3]);
 	else if($value=="css") 
 	echo("<link rel='stylesheet' href=" . $key . "/>");
 	} 
-	echo $html;
-echo '<style>' . json_decode($array[1]) . '</style>';
+echo '<style>' . $array[1] . '</style>';
 ?>
 </head>
 <body>
-<?php echo json_decode($array[0]); ?>
+<?php echo $array[0] ?>
 </body>
 <?php
-echo '<script>' . json_decode($array[2]) . '</script>';	
+echo '<script>' . $array[2] . '</script>';	
 
 ?>
 </html>
